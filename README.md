@@ -47,7 +47,7 @@ Current stages:
 2. `color` — restrained saturation, tonal-region color crossover, muted greens, warm highlights, and a slight magenta skin bias.
 3. `halation` — highlight isolation, Gaussian blur, warm tint, and subtle additive blending.
 4. `sharpness` — optional edge-aware digital sharpness reduction, disabled by default.
-5. `grain` — multi-scale procedural grain with luminance weighting and slight chromatic variation.
+5. `grain` — integrated media texture: layered grain, density variation, scanner-like softness, tiny spatial instability, and texture-aware color breakup.
 6. `lens` — subtle vignette, edge softness, and optional tiny chromatic aberration.
 
 Preset files live in `presets/`. The first preset is `soft_portrait_400.json`, which defines both the stage order and effect strengths.
@@ -149,14 +149,24 @@ Film color should not feel like three independent RGB sliders. Real film stocks,
 
 These controls should stay conservative. The intended result is smoother color transitions, more organic overexposure behavior, and warmer emotional realism, not a visible LUT-heavy or orange-and-teal grade.
 
-### Grain Controls
+### Media Texture Controls
 
-Real film grain is not a uniform transparent overlay. It varies with exposure, appears more clearly in shadows and midtones, and becomes weaker in highlights where density and highlight rolloff should feel smooth.
+Real film grain is not a uniform transparent overlay. Scanned prints carry a hierarchy of fine silver/dye texture, mid-frequency paper or emulsion structure, and barely visible density variation. Those layers interact with exposure, local contrast, color purity, and scanner softness. FilmFilter keeps this behavior subtle so texture feels embedded in the photograph rather than pasted over it.
 
 - `grain_amount` controls the overall texture strength; defaults should stay subtle.
 - `grain_size` controls the scale of the blended procedural noise.
 - `grain_shadow_bias` shifts texture visibility toward shadows and midtones.
 - `grain_chromaticity` blends restrained color variation into mostly monochrome grain.
+- `micro_grain_amount` controls fine texture that gives the image a scanned photographic surface.
+- `mid_grain_amount` adds a quieter mid-frequency structure so grain does not read as a single digital noise scale.
+- `density_variation_amount` adds extremely subtle low-frequency print density variation. Keep it very low to avoid cloudy or muddy output.
+- `texture_scale_balance` shifts the texture hierarchy between crisp micro grain and broader organic structure.
+- `scanner_softness`, `tonal_diffusion`, and `edge_softening` reduce excessive digital precision through restrained frequency-selective and edge-aware blending, not global blur.
+- `chroma_instability`, `density_instability`, and `scan_irregularity` introduce barely perceptible color, density, and subpixel scan inconsistencies. These controls should remain near invisible.
+
+Texture also participates in color rendering. Saturation and chroma are modulated slightly by the same procedural structure, with protection for likely skin tones and bright highlights. This softens RGB-clean transitions without creating a visible gimmick.
+
+Subtle instability improves realism because photographic media and scanning are never perfectly uniform. Over-processing destroys that believability quickly: obvious warping, fake dust, giant grain, and strong color drift call attention to the effect instead of the photograph.
 
 ### Halation Controls
 

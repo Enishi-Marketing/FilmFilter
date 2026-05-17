@@ -24,6 +24,9 @@ Target:
 - muted olive greens
 - subtle bloom/halation
 - believable fine grain
+- layered media texture
+- subtle scanner-like softness
+- barely perceptible spatial and density instability
 - gentle optical imperfections
 
 Avoid:
@@ -56,6 +59,10 @@ The output should feel nostalgic, soft, photographic, consumer-grade, and imperf
 - Treat color as cross-channel and tonal-region dependent. Film-like rendering should allow restrained red/yellow, green/olive, blue/shadow, and highlight saturation interactions instead of isolated per-channel RGB edits.
 - Use reusable tonal masks for regional behavior when adding saturation, hue, grain, or rolloff changes. Masks should overlap smoothly and avoid visible segmentation.
 - Keep grain procedural, fine, and exposure-aware. It should be more visible in shadows and midtones than in highlights, with only restrained chromatic variation.
+- Treat texture as a media interaction, not an overlay. Layer micro grain, mid-frequency structure, and extremely subtle density variation so the image feels rendered through a photographic surface.
+- Scanner softness should be frequency-selective or edge-aware. Avoid global blur, haze, or obvious detail loss.
+- Spatial instability must remain nearly invisible: tiny chroma drift, density unevenness, and scan irregularity are useful only when they reduce digital cleanliness without announcing themselves.
+- Texture-aware color should soften RGB purity and hue transitions while protecting natural skin tones.
 - Digital sharpness reduction must remain optional, toggleable through presets, and nearly invisible when enabled. It should reduce brittle microcontrast without obvious blur.
 - Do not add a GUI, web app, GPU requirement, or ML model unless explicitly requested.
 - Never wrap imports in `try`/`except` blocks.

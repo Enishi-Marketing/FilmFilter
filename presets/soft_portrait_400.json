@@ -51,6 +51,16 @@
       "grain_size": 1.05,
       "grain_shadow_bias": 0.58,
       "grain_chromaticity": 0.18,
+      "micro_grain_amount": 0.017,
+      "mid_grain_amount": 0.007,
+      "density_variation_amount": 0.003,
+      "texture_scale_balance": 0.46,
+      "scanner_softness": 0.045,
+      "tonal_diffusion": 0.035,
+      "edge_softening": 0.035,
+      "chroma_instability": 0.014,
+      "density_instability": 0.010,
+      "scan_irregularity": 0.010,
       "seed": null
     },
     "lens": {

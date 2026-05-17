@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from pipeline.color import apply_color
+from pipeline.grain import apply_grain
 from pipeline.pipeline import FilmPipeline, load_preset
 from pipeline.tonal import tonal_masks, visualize_masks
 
@@ -74,3 +75,33 @@ def test_color_stage_compresses_bright_saturation_more_than_midtones() -> None:
     assert output.max() <= 1.0
     assert output_chroma[0, 1] < input_chroma[0, 1]
     assert (input_chroma[0, 0] - output_chroma[0, 0]) < (input_chroma[0, 1] - output_chroma[0, 1])
+
+
+def test_grain_stage_media_texture_is_deterministic_and_bounded() -> None:
+    gradient = np.linspace(0.02, 0.98, 40, dtype=np.float32)
+    x, y = np.meshgrid(gradient, gradient, indexing="xy")
+    image = np.dstack((x, y * 0.82 + 0.08, np.full((40, 40), 0.36, dtype=np.float32)))
+
+    kwargs = {
+        "grain_amount": 0.024,
+        "micro_grain_amount": 0.017,
+        "mid_grain_amount": 0.007,
+        "density_variation_amount": 0.003,
+        "scanner_softness": 0.045,
+        "tonal_diffusion": 0.035,
+        "edge_softening": 0.035,
+        "chroma_instability": 0.014,
+        "density_instability": 0.010,
+        "scan_irregularity": 0.010,
+        "seed": 321,
+    }
+
+    first = apply_grain(image, **kwargs)
+    second = apply_grain(image, **kwargs)
+
+    assert first.shape == image.shape
+    assert np.isfinite(first).all()
+    assert first.min() >= 0.0
+    assert first.max() <= 1.0
+    assert np.allclose(first, second)
+    assert not np.allclose(first, image)
