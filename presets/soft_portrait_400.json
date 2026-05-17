@@ -1,0 +1,48 @@
+{
+  "name": "Soft Portrait 400",
+  "description": "A restrained consumer-film portrait preset with lifted blacks, warm highlights, muted greens, subtle halation, fine grain, and gentle lens falloff.",
+  "pipeline": [
+    "tone",
+    "color",
+    "halation",
+    "grain",
+    "lens"
+  ],
+  "effects": {
+    "tone": {
+      "enabled": true,
+      "lifted_black": 0.045,
+      "contrast": 0.92,
+      "highlight_rolloff": 0.35,
+      "rolloff_start": 0.62,
+      "midtone_preservation": 0.65
+    },
+    "color": {
+      "enabled": true,
+      "saturation": 0.93,
+      "green_mute": 0.09,
+      "highlight_warmth": 0.045,
+      "skin_magenta_bias": 0.018
+    },
+    "halation": {
+      "enabled": true,
+      "strength": 0.055,
+      "threshold": 0.72,
+      "radius": 9.0,
+      "warmth": [1.0, 0.42, 0.18]
+    },
+    "grain": {
+      "enabled": true,
+      "strength": 0.028,
+      "size": 1.15,
+      "chroma": 0.22,
+      "seed": null
+    },
+    "lens": {
+      "enabled": true,
+      "vignette": 0.10,
+      "edge_softness": 0.18,
+      "aberration": 0.25
+    }
+  }
+}
