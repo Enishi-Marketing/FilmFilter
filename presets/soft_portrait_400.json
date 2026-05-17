@@ -25,7 +25,11 @@
       "saturation": 0.93,
       "green_mute": 0.09,
       "highlight_warmth": 0.045,
-      "skin_magenta_bias": 0.018
+      "skin_magenta_bias": 0.018,
+      "saturation_compression": 0.22,
+      "highlight_desaturation": 0.10,
+      "shadow_color_shift": 0.28,
+      "crossover_strength": 0.34
     },
     "halation": {
       "enabled": true,

@@ -20,6 +20,8 @@ The default aesthetic favors:
 - lifted blacks instead of crushed shadows
 - reduced microcontrast instead of brittle sharpness
 - warm but restrained highlight color
+- cross-channel color response instead of isolated RGB adjustment
+- nonlinear saturation compression near tonal extremes
 - muted olive greens
 - subtle bloom and halation
 - fine procedural grain
@@ -42,7 +44,7 @@ The project is built around a JSON-driven, sequential pipeline. Images are loade
 Current stages:
 
 1. `tone` — lifted blacks, softened contrast, and creamy luminance-based highlight shoulder while preserving midtones.
-2. `color` — restrained saturation, muted greens, warm highlights, and a slight magenta skin bias.
+2. `color` — restrained saturation, tonal-region color crossover, muted greens, warm highlights, and a slight magenta skin bias.
 3. `halation` — highlight isolation, Gaussian blur, warm tint, and subtle additive blending.
 4. `sharpness` — optional edge-aware digital sharpness reduction, disabled by default.
 5. `grain` — multi-scale procedural grain with luminance weighting and slight chromatic variation.
@@ -59,6 +61,7 @@ FilmFilter/
 ├── pipeline/
 │   ├── tone.py
 │   ├── color.py
+│   ├── tonal.py
 │   ├── halation.py
 │   ├── sharpness.py
 │   ├── grain.py
@@ -133,6 +136,18 @@ Highlight behavior is critical to film perception because digital clipping often
 - `highlight_compression` controls how much bright luminance bends away from hard clipping.
 - `shoulder_strength` controls how strongly the creamy upper highlight shoulder is blended into the result.
 - `shadow_chroma_damping` reduces color casts that become more visible when deep blacks are lifted.
+
+### Cross-Channel Color Controls
+
+Film color should not feel like three independent RGB sliders. Real film stocks, print paper, and scanners all introduce small cross-channel interactions: reds compress before pure clipping, greens drift toward olive, blues lose purity in deep shadows, and highlights become creamier as saturation rolls off. FilmFilter models this as a restrained color stage driven by reusable shadow, midtone, and highlight masks from `pipeline/tonal.py`.
+
+- `crossover_strength` controls subtle channel mixing, red highlight compression, olive foliage drift, and shadow blue compression.
+- `saturation_compression` reduces color purity nonlinearly near shadows, highlights, and clipping pressure while protecting midtone richness.
+- `highlight_desaturation` makes bright saturated colors pastelize instead of staying digitally pure near white.
+- `shadow_color_shift` applies a very small cyan-leaning shadow bias, useful for scanned-print impurity without turning shadows teal.
+- `highlight_warmth` remains the main control for creamy print-like highlight warmth.
+
+These controls should stay conservative. The intended result is smoother color transitions, more organic overexposure behavior, and warmer emotional realism, not a visible LUT-heavy or orange-and-teal grade.
 
 ### Grain Controls
 

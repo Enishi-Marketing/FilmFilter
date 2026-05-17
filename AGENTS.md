@@ -19,6 +19,8 @@ Target:
 - lifted blacks
 - reduced microcontrast
 - warm skin tones
+- cross-channel color interaction
+- nonlinear saturation compression
 - muted olive greens
 - subtle bloom/halation
 - believable fine grain
@@ -51,6 +53,8 @@ The output should feel nostalgic, soft, photographic, consumer-grade, and imperf
 - Add new effect parameters through presets rather than hidden constants where practical.
 - Keep defaults conservative.
 - Treat highlight behavior as a core film-perception cue: prefer smooth luminance shoulders, stable highlight color, and preserved midtones over hard clipping or HDR-like expansion.
+- Treat color as cross-channel and tonal-region dependent. Film-like rendering should allow restrained red/yellow, green/olive, blue/shadow, and highlight saturation interactions instead of isolated per-channel RGB edits.
+- Use reusable tonal masks for regional behavior when adding saturation, hue, grain, or rolloff changes. Masks should overlap smoothly and avoid visible segmentation.
 - Keep grain procedural, fine, and exposure-aware. It should be more visible in shadows and midtones than in highlights, with only restrained chromatic variation.
 - Digital sharpness reduction must remain optional, toggleable through presets, and nearly invisible when enabled. It should reduce brittle microcontrast without obvious blur.
 - Do not add a GUI, web app, GPU requirement, or ML model unless explicitly requested.

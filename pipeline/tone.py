@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-
-def _smoothstep(edge0: float, edge1: float, x: np.ndarray) -> np.ndarray:
-    """Return a smooth 0..1 transition used for gentle tonal blends."""
-    t = np.clip((x - edge0) / max(edge1 - edge0, 1e-6), 0.0, 1.0)
-    return t * t * (3.0 - 2.0 * t)
+from .tonal import LUMINANCE_WEIGHTS, luminance, smoothstep
 
 
 def apply_tone(
@@ -51,22 +47,21 @@ def apply_tone(
     if highlight_rolloff is not None:
         highlight_compression = highlight_rolloff
 
-    luminance_weights = np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
-    luminance = np.dot(img, luminance_weights)
+    luminance_values = luminance(img)
 
     # Reduce harsh global contrast around photographic middle gray without making
     # the whole frame feel flat. This trims digital precision before the shoulder.
     contrast_scale = 1.0 - np.clip(contrast_softness, 0.0, 1.0) * 0.45
-    toned_luma = 0.5 + (luminance - 0.5) * contrast_scale
+    toned_luma = 0.5 + (luminance_values - 0.5) * contrast_scale
 
     # Lift blacks by raising the toe of the curve while leaving midtones usable.
-    toe_mask = 1.0 - _smoothstep(0.18, 0.72, toned_luma)
+    toe_mask = 1.0 - smoothstep(0.18, 0.72, toned_luma)
     toned_luma = toned_luma + black_lift * (1.0 - toned_luma) ** 2 * toe_mask
 
     # Compress highlights with a smooth luminance shoulder. Applying the curve to
     # luminance and scaling RGB preserves hue relationships better than bending
     # each channel independently, which can make whites look muddy or unstable.
-    shoulder = _smoothstep(rolloff_start, 1.0, toned_luma)
+    shoulder = smoothstep(rolloff_start, 1.0, toned_luma)
     high = np.maximum(toned_luma - rolloff_start, 0.0)
     compression = max(1.0 - float(highlight_compression) * 0.72, 0.12)
     compressed_highs = rolloff_start + (1.0 - rolloff_start) * (
@@ -75,33 +70,33 @@ def apply_tone(
     shoulder_mix = shoulder * np.clip(shoulder_strength, 0.0, 1.0)
     rolled_luma = toned_luma * (1.0 - shoulder_mix) + compressed_highs * shoulder_mix
 
-    ratio = rolled_luma / np.maximum(luminance, 1e-5)
+    ratio = rolled_luma / np.maximum(luminance_values, 1e-5)
     rolled = img * ratio[..., None]
 
     # Near white, gently blend toward neutral paper-white to avoid colored clipping
     # while preserving enough channel relationship that highlights do not turn gray.
     neutral = rolled_luma[..., None]
-    white_mask = _smoothstep(0.82, 1.0, rolled_luma)[..., None] * 0.18 * shoulder_mix[..., None]
+    white_mask = smoothstep(0.82, 1.0, rolled_luma)[..., None] * 0.18 * shoulder_mix[..., None]
     rolled = rolled * (1.0 - white_mask) + neutral * white_mask
 
     # Apply the lifted toe directly to very dark pixels where luminance scaling has
     # little leverage because the original channel values are close to zero.
-    shadow_fill = black_lift * (1.0 - _smoothstep(0.0, 0.28, luminance))[..., None] * 0.32
+    shadow_fill = black_lift * (1.0 - smoothstep(0.0, 0.28, luminance_values))[..., None] * 0.32
     rolled = rolled + shadow_fill
 
     # Lifted blacks can reveal and exaggerate digital color casts. Pull only the
     # deepest shadows a little closer to neutral luminance so dark regions feel
     # like scanned print density rather than red or magenta contamination.
-    shadow_neutral = np.dot(rolled, luminance_weights)[..., None]
+    shadow_neutral = np.dot(rolled, LUMINANCE_WEIGHTS)[..., None]
     shadow_color_mask = (
-        (1.0 - _smoothstep(0.06, 0.38, luminance))[..., None]
+        (1.0 - smoothstep(0.06, 0.38, luminance_values))[..., None]
         * np.clip(shadow_chroma_damping, 0.0, 1.0)
     )
     rolled = rolled * (1.0 - shadow_color_mask) + shadow_neutral * shadow_color_mask
 
     # Blend back some original midtone structure so faces and ordinary objects keep
     # shape while shadows and highlights receive the print-like curve.
-    mid_mask = 1.0 - np.abs(luminance - 0.5) * 2.0
+    mid_mask = 1.0 - np.abs(luminance_values - 0.5) * 2.0
     mid_mask = (
         np.clip(mid_mask[..., None], 0.0, 1.0)
         * np.clip(midtone_preservation, 0.0, 1.0)

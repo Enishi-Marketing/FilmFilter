@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
+from pipeline.color import apply_color
 from pipeline.pipeline import FilmPipeline, load_preset
+from pipeline.tonal import tonal_masks, visualize_masks
 
 
 def test_soft_portrait_pipeline_runs_on_float_rgb_image() -> None:
@@ -23,3 +25,52 @@ def test_soft_portrait_pipeline_runs_on_float_rgb_image() -> None:
     assert output.min() >= 0.0
     assert output.max() <= 1.0
     assert not np.allclose(output, image)
+
+
+def test_tonal_masks_overlap_smoothly() -> None:
+    gradient = np.linspace(0.0, 1.0, 64, dtype=np.float32)
+    masks = tonal_masks(gradient)
+    preview = visualize_masks(masks)
+
+    assert set(masks) == {"shadows", "midtones", "highlights"}
+    assert masks["shadows"].shape == (64, 1)
+    assert masks["midtones"].shape == (64, 1)
+    assert masks["highlights"].shape == (64, 1)
+    assert preview.shape == (64, 3)
+    assert np.isfinite(preview).all()
+    assert masks["shadows"][20, 0] > 0.0
+    assert masks["midtones"][20, 0] > 0.0
+    assert masks["midtones"][44, 0] > 0.0
+    assert masks["highlights"][44, 0] > 0.0
+
+
+def test_color_stage_compresses_bright_saturation_more_than_midtones() -> None:
+    image = np.array(
+        [
+            [[0.62, 0.34, 0.30], [0.98, 0.22, 0.18]],
+            [[0.22, 0.24, 0.44], [0.30, 0.60, 0.25]],
+        ],
+        dtype=np.float32,
+    )
+
+    output = apply_color(
+        image,
+        saturation=1.0,
+        green_mute=0.0,
+        highlight_warmth=0.0,
+        skin_magenta_bias=0.0,
+        saturation_compression=0.45,
+        highlight_desaturation=0.20,
+        shadow_color_shift=0.0,
+        crossover_strength=0.25,
+    )
+
+    input_chroma = np.max(image, axis=-1) - np.min(image, axis=-1)
+    output_chroma = np.max(output, axis=-1) - np.min(output, axis=-1)
+
+    assert output.shape == image.shape
+    assert np.isfinite(output).all()
+    assert output.min() >= 0.0
+    assert output.max() <= 1.0
+    assert output_chroma[0, 1] < input_chroma[0, 1]
+    assert (input_chroma[0, 0] - output_chroma[0, 0]) < (input_chroma[0, 1] - output_chroma[0, 1])

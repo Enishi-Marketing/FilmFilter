@@ -5,6 +5,8 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
+from .tonal import luminance, tonal_masks
+
 
 def apply_grain(
     image: np.ndarray,
@@ -47,7 +49,8 @@ def apply_grain(
                 noise = noise[..., None]
         return noise / max(float(np.std(noise)), 1e-6)
 
-    luminance = np.dot(img, np.array([0.2126, 0.7152, 0.0722], dtype=np.float32))[..., None]
+    luminance_values = luminance(img)[..., None]
+    masks = tonal_masks(luminance_values[..., 0])
 
     fine_sigma = max(float(grain_size) * 0.22, 0.01)
     medium_sigma = max(float(grain_size) * 0.58, 0.01)
@@ -65,9 +68,9 @@ def apply_grain(
 
     # Grain should not look like a static opacity overlay. Shadows/mids get the
     # most texture; highlights stay cleaner so the shoulder remains creamy.
-    shadow_weight = (1.0 - luminance) ** (1.15 + np.clip(grain_shadow_bias, 0.0, 1.0) * 0.85)
-    mid_weight = np.exp(-((luminance - 0.42) ** 2) / 0.08)
-    highlight_protection = 1.0 - np.clip((luminance - 0.72) / 0.28, 0.0, 1.0) ** 2
+    shadow_weight = (1.0 - luminance_values) ** (1.15 + np.clip(grain_shadow_bias, 0.0, 1.0) * 0.85)
+    mid_weight = masks["midtones"] * 0.62 + np.exp(-((luminance_values - 0.42) ** 2) / 0.08) * 0.38
+    highlight_protection = 1.0 - masks["highlights"] * 0.72
     intensity = (0.34 + shadow_weight * 0.62 + mid_weight * 0.34) * highlight_protection
 
     chroma_mix = np.clip(grain_chromaticity, 0.0, 1.0)
